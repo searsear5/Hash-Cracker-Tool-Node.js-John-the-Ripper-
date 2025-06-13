@@ -1,0 +1,88 @@
+import { writeFileSync, existsSync, readFileSync } from 'fs';
+import { spawnSync } from 'child_process';
+import { detectHashType } from './detectFormat.js';
+
+const hashInput = process.argv[2];
+if (!hashInput) {
+  console.error('กรุณาระบุ hash ที่ต้องการ crack เช่น: node src/index.js 5d41402abc4b2a76b9719d911017c592');
+  process.exit(1);
+}
+
+const formatMap = {
+  'MD5 or NTLM': 'raw-md5',
+  'bcrypt': 'bcrypt',
+  'Argon2': 'argon2',
+  'PBKDF2': 'pbkdf2',
+  'Django SHA1': 'raw-sha1',
+  'WordPress SHA1': 'raw-sha1',
+  'SHA512 crypt (Unix)': 'sha512crypt',
+  'SHA256 crypt (Unix)': 'sha256crypt',
+  'MD5 crypt (Unix)': 'md5crypt',
+  'Apache MD5': 'md5crypt',
+  'LDAP SSHA (Base64)': 'ssha',
+  'LDAP SHA-1 (Base64)': 'sha1',
+  'NT Hash (JOOMLA)': 'nt',
+  'NetNTLMv1': 'netntlmv1',
+  'NetNTLMv2': 'netntlmv2',
+  'LM Hash': 'lm',
+  'SHA1': 'raw-sha1',
+  'SHA256': 'raw-sha256',
+  'SHA384': 'raw-sha384',
+  'SHA512': 'raw-sha512',
+  'Sun MD5 crypt': 'md5crypt',
+  'scrypt': 'scrypt',
+  'scrypt (alt)': 'scrypt',
+  'MyBB md5(md5($pass).$salt)': 'mybb',
+};
+
+const detected = detectHashType(hashInput);
+console.log(` Hash: ${hashInput}`);
+console.log(` ตรวจเจอเป็น: ${detected}`);
+
+const johnFormat = formatMap[detected];
+if (!johnFormat) {
+  console.error(` ไม่รองรับการ crack ด้วย john แบบอัตโนมัติสำหรับประเภทนี้: ${detected}`);
+  process.exit(1);
+}
+
+writeFileSync('hash.txt', hashInput + '\n');
+
+console.log(' เริ่ม crack ด้วย john the ripper...');
+
+const wordlistPath = './wordlists/rockyou.txt';
+const johnPath = 'john';
+const potFile = 'john.pot'; // ✅ pot file ที่ชัดเจน
+
+// เรียก john เพื่อ crack
+const crack = spawnSync(johnPath, [
+  '--format=' + johnFormat,
+  '--wordlist=' + wordlistPath,
+  '--pot=' + potFile, // ✅ สำคัญ!
+  'hash.txt'
+], { encoding: 'utf-8' });
+
+if (crack.stdout) console.log(crack.stdout.trim());
+if (crack.stderr) console.error(crack.stderr.trim());
+
+if (crack.status !== 0) {
+  console.error(` ❌ John ล้มเหลว (exit code ${crack.status})`);
+}
+
+// แสดงผลลัพธ์จาก john
+const show = spawnSync(johnPath, [
+  '--show',
+  '--format=' + johnFormat,
+  '--pot=' + potFile, // ✅ สำคัญ!
+  'hash.txt'
+], { encoding: 'utf-8' });
+
+console.log('\n✅ ผลลัพธ์ crack hash:');
+console.log(show.stdout || 'ไม่พบรหัสผ่าน');
+
+// DEBUG: แสดงเนื้อหา john.pot
+console.log('\n=== DEBUG: john.pot content ===');
+if (existsSync(potFile)) {
+  console.log(readFileSync(potFile, 'utf-8'));
+} else {
+  console.log('john.pot ไม่ถูกสร้างหรือยังไม่มีข้อมูล');
+}

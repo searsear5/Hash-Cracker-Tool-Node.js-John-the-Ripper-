@@ -1,0 +1,19 @@
+# Node.js dependencies
+node_modules/
+
+# John the Ripper output and temp files
+run/john.pot
+run/*.rec
+run/*.log
+run/rockyou.txt
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# VS Code settings
