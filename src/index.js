@@ -39,9 +39,14 @@ const detected = detectHashType(hashInput);
 console.log(` Hash: ${hashInput}`);
 console.log(` ตรวจเจอเป็น: ${detected}`);
 
-if(detected == 'Base64-encoded (likely SHA or token)' || detected == 'Base64 URL-safe (JWT or token)' || detected == 'JWT Token (Base64 URL)') {
+if (detected == 'Base64-encoded (likely SHA or token)' || detected == 'Base64 URL-safe (JWT or token)' || detected == 'JWT Token (Base64 URL)') {
   const decoded = Buffer.from(hashInput, 'base64').toString('utf-8');
   console.log(`  ผลลัพธ์ Base64 decode: ${decoded}`);
+  process.exit(0);
+}
+if (detected == 'Hex encoded string') {
+  const decoded = Buffer.from(hashInput, 'hex').toString('utf-8');
+  console.log(`  ผลลัพธ์ Hex decode: ${decoded}`);
   process.exit(0);
 }
 else{

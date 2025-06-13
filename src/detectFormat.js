@@ -27,9 +27,13 @@ function detectHashType(hash) {
         { regex: /^\$SCRYPT\$.*$/, type: 'scrypt (alt)' },
         { regex: /^\$ml\$.*$/, type: 'MyBB md5(md5($pass).$salt)' },
         { regex: /^v=[0-9]\|.+\|.+$/, type: 'Windows DPAPI blob' },
+        {
+            regex: /^[a-fA-F0-9]+$/,
+            type: 'Hex encoded string',
+        },
         { regex: /^[A-Za-z0-9+\/=]{20,}$/, type: 'Base64-encoded (likely SHA or token)' },
         { regex: /^[A-Za-z0-9_\-]{20,}$/, type: 'Base64 URL-safe (JWT or token)' },
-        { regex: /^[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+$/, type: 'JWT Token (Base64 URL)' }
+        { regex: /^[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+$/, type: 'JWT Token (Base64 URL)' },
     ];
 
     for (const pattern of patterns) {
